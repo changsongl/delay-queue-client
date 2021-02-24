@@ -1,4 +1,4 @@
-package client
+package queue
 
 import (
 	"github.com/changsongl/delay-queue-client/api"
