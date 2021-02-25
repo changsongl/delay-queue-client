@@ -1,4 +1,4 @@
-package queue
+package client
 
 import (
 	"github.com/changsongl/delay-queue-client/api"
@@ -17,7 +17,7 @@ type client struct {
 	request api.Request
 }
 
-func New() Client {
+func NewClient() Client {
 	res := http.NewRequester()
 	c := &client{
 		request: res,
