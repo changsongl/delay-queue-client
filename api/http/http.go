@@ -3,16 +3,9 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/changsongl/delay-queue-client/api"
 	"github.com/go-resty/resty/v2"
 	"net/http"
-)
-
-const (
-	addUrlFormat = "/topic/%s/job"
-	endUrlFormat = "/topic/%s/job/%s"
-	popUrlFormat = "/topic/%s/job"
 )
 
 type respBody struct {
@@ -23,15 +16,19 @@ type respBody struct {
 }
 
 type requester struct {
-	req  *resty.Request
+	req  *resty.Client
 	host string
 }
 
 func NewRequester(host string) api.Request {
-	httpReq := resty.New().R()
+	httpReq := resty.New()
 	r := &requester{req: httpReq, host: host}
 
 	return r
+}
+
+func (r *requester)getRequest() *resty.Request{
+	return r.req.R()
 }
 
 func (r *requester) AddDelayJob(topic, id, body string, delay, ttr uint) error {
@@ -44,8 +41,8 @@ func (r *requester) ReplaceDelayJob(topic, id, body string, delay, ttr uint) err
 
 func (r *requester) addDelayJob(topic, id, body string, delay, ttr uint, override bool) error {
 	reqBody := r.getAddRequestMap(id, body, delay, ttr, override)
-	url := r.getHost() + getAddUrl(topic)
-	resp, err := r.req.SetBody(reqBody).Post(url)
+	url := r.getHost() + addJobPath(topic)
+	resp, err := r.getRequest().SetBody(reqBody).Post(url)
 	if err != nil {
 		return err
 	}
@@ -59,8 +56,8 @@ func (r *requester) addDelayJob(topic, id, body string, delay, ttr uint, overrid
 }
 
 func (r *requester) FinishDelayJob(topic string, id string) error {
-	url := r.getHost() + getEndUrl(topic, id)
-	resp, err := r.req.Put(url)
+	url := r.getHost() + finishJobPath(topic, id)
+	resp, err := r.getRequest().Put(url)
 	if err != nil {
 		return err
 	}
@@ -74,8 +71,8 @@ func (r *requester) FinishDelayJob(topic string, id string) error {
 }
 
 func (r *requester) DeleteDelayJob(topic string, id string) error {
-	url := r.getHost() + getEndUrl(topic, id)
-	resp, err := r.req.Delete(url)
+	url := r.getHost() + finishJobPath(topic, id)
+	resp, err := r.getRequest().Delete(url)
 	if err != nil {
 		return err
 	}
@@ -89,8 +86,8 @@ func (r *requester) DeleteDelayJob(topic string, id string) error {
 }
 
 func (r *requester) PopDelayJob(topic string) (id string, body string, err error) {
-	url := r.getHost() + getPopUrl(topic)
-	resp, err := r.req.Get(url)
+	url := r.getUrl(popJobPath(topic))
+	resp, err := r.getRequest().Get(url)
 	if err != nil {
 		return "", "", err
 	}
@@ -135,14 +132,6 @@ func (r *requester) getAddRequestMap(id, body string,
 	}
 }
 
-func getAddUrl(topic string) string {
-	return fmt.Sprintf(addUrlFormat, topic)
-}
-
-func getEndUrl(topic, id string) string {
-	return fmt.Sprintf(endUrlFormat, topic, id)
-}
-
-func getPopUrl(topic string) string {
-	return fmt.Sprintf(popUrlFormat, topic)
+func (r *requester) getUrl(path string) string{
+	return r.getHost()+path
 }

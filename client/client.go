@@ -3,11 +3,12 @@ package client
 import (
 	"github.com/changsongl/delay-queue-client/api"
 	"github.com/changsongl/delay-queue-client/api/http"
+	"github.com/changsongl/delay-queue-client/job"
 )
 
 type Client interface {
-	AddJob(job *Job) error
-	ReplaceJob(job *Job) error
+	AddJob(job *job.Job) error
+	ReplaceJob(job *job.Job) error
 	FinishJob(topic string, id string) error
 	DeleteJob(topic string, id string) error
 	PopJob(topic string) (id string, body string, err error)
@@ -27,12 +28,12 @@ func NewClient(host string) Client {
 	return c
 }
 
-func (c client) AddJob(job *Job) error {
-	return c.request.AddDelayJob(job.extractData())
+func (c client) AddJob(job *job.Job) error {
+	return c.request.AddDelayJob(job.ExtractData())
 }
 
-func (c client) ReplaceJob(job *Job) error {
-	return c.request.ReplaceDelayJob(job.extractData())
+func (c client) ReplaceJob(job *job.Job) error {
+	return c.request.ReplaceDelayJob(job.ExtractData())
 }
 
 func (c client) FinishJob(topic string, id string) error {

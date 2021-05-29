@@ -1,4 +1,4 @@
-package queue
+package consumer
 
 import "github.com/changsongl/delay-queue-client/client"
 

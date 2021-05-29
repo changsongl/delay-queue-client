@@ -1,4 +1,4 @@
-package client
+package job
 
 import "time"
 
@@ -73,7 +73,7 @@ func (j *Job) getCheckFields() []JobField {
 	return []JobField{j.Topic, j.ID}
 }
 
-func (j *Job) extractData() (topic, id, body string, delay, ttr uint) {
+func (j *Job) ExtractData() (topic, id, body string, delay, ttr uint) {
 	return string(j.Topic), string(j.ID), string(j.Body),
 		uint(time.Duration(j.Delay) / time.Second), uint(time.Duration(j.TTR) / time.Second)
 }
