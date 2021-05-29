@@ -18,7 +18,7 @@ type client struct {
 }
 
 func NewClient(host string) Client {
-	res := http.NewRequester()
+	res := http.NewRequester(host)
 
 	c := &client{
 		request: res,
