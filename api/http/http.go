@@ -27,9 +27,9 @@ type requester struct {
 	host string
 }
 
-func NewRequester() api.Request {
+func NewRequester(host string) api.Request {
 	httpReq := resty.New().R()
-	r := &requester{req: httpReq}
+	r := &requester{req: httpReq, host: host}
 
 	return r
 }

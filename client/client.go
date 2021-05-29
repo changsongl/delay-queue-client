@@ -17,8 +17,9 @@ type client struct {
 	request api.Request
 }
 
-func NewClient() Client {
+func NewClient(host string) Client {
 	res := http.NewRequester()
+
 	c := &client{
 		request: res,
 	}
