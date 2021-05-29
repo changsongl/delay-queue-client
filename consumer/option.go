@@ -3,12 +3,12 @@ package consumer
 import "time"
 
 const (
-	defaultBackOff       = 10 * time.Minute
+	defaultBackOff       = 10 * time.Millisecond
 	defaultBackOffInc    = 0 * time.Second
 	defaultBackOffFactor = 2.0
 	defaultBackOffMax    = 2 * time.Second
 
-	defaultErrorBackOff       = 100 * time.Minute
+	defaultErrorBackOff       = 100 * time.Millisecond
 	defaultErrorBackOffInc    = 0 * time.Second
 	defaultErrorBackOffFactor = 2.0
 	defaultErrorBackOffMax    = 10 * time.Second

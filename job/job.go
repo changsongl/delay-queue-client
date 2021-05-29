@@ -2,7 +2,7 @@ package job
 
 import "time"
 
-type JobOption interface {
+type Option interface {
 	apply(j *Job)
 }
 
@@ -20,7 +20,7 @@ type Job struct {
 	Body  jobBody  `json:"jobBody"`
 }
 
-func NewJob(topic, id string, opts ...JobOption) (*Job, error) {
+func New(topic, id string, opts ...Option) (*Job, error) {
 	j := &Job{
 		ID:    jobId(id),
 		Topic: jobTopic(topic),
@@ -33,7 +33,7 @@ func NewJob(topic, id string, opts ...JobOption) (*Job, error) {
 	return j, nil
 }
 
-func JobDelayOption(delay time.Duration) JobOption {
+func JobDelayOption(delay time.Duration) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.Delay = jobDelay(delay)
@@ -41,7 +41,7 @@ func JobDelayOption(delay time.Duration) JobOption {
 	)
 }
 
-func JobTTROption(ttr time.Duration) JobOption {
+func JobTTROption(ttr time.Duration) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.TTR = jobTTR(ttr)
@@ -49,7 +49,7 @@ func JobTTROption(ttr time.Duration) JobOption {
 	)
 }
 
-func JobBodyOption(body string) JobOption {
+func JobBodyOption(body string) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.Body = jobBody(body)
