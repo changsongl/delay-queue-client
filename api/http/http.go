@@ -11,9 +11,18 @@ import (
 type respBody struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
-	Id      string `json:"id"`
-	Body    string `json:"body"`
+	Data    *Data  `json:"data"`
 }
+
+type Data struct {
+	Topic string `json:"topic"`
+	Id    string `json:"id"`
+	Body  string `json:"body"`
+	Delay uint64 `json:"delay"`
+	TTR   uint64 `json:"ttr"`
+}
+
+var ErrorNoAvailableJob = errors.New("no available job")
 
 type requester struct {
 	req  *resty.Client
@@ -27,7 +36,7 @@ func NewRequester(host string) api.Request {
 	return r
 }
 
-func (r *requester)getRequest() *resty.Request{
+func (r *requester) getRequest() *resty.Request {
 	return r.req.R()
 }
 
@@ -85,19 +94,24 @@ func (r *requester) DeleteDelayJob(topic string, id string) error {
 	return nil
 }
 
-func (r *requester) PopDelayJob(topic string) (id string, body string, err error) {
+func (r *requester) PopDelayJob(topic string) (topicName, id, body string, delay, ttr uint64, err error) {
 	url := r.getUrl(popJobPath(topic))
 	resp, err := r.getRequest().Get(url)
 	if err != nil {
-		return "", "", err
+		return "", "", "", 0, 0, err
 	}
 
 	respBody, err := r.getRespBody(resp)
 	if err != nil {
-		return "", "", err
+		return "", "", "", 0, 0, err
 	}
 
-	return respBody.Id, respBody.Body, nil
+	if respBody.Data == nil {
+		return "", "", "", 0, 0, ErrorNoAvailableJob
+	}
+
+	return respBody.Data.Topic, respBody.Data.Id, respBody.Data.Body,
+		respBody.Data.Delay, respBody.Data.TTR, nil
 }
 
 func (r *requester) getHost() string {
@@ -132,6 +146,6 @@ func (r *requester) getAddRequestMap(id, body string,
 	}
 }
 
-func (r *requester) getUrl(path string) string{
-	return r.getHost()+path
+func (r *requester) getUrl(path string) string {
+	return r.getHost() + path
 }

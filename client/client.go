@@ -11,7 +11,7 @@ type Client interface {
 	ReplaceJob(job *job.Job) error
 	FinishJob(topic string, id string) error
 	DeleteJob(topic string, id string) error
-	PopJob(topic string) (id string, body string, err error)
+	PopJob(topic string) (topicName, id, body string, delay, ttr uint64, err error)
 }
 
 type client struct {
@@ -44,6 +44,6 @@ func (c client) DeleteJob(topic string, id string) error {
 	return c.request.DeleteDelayJob(topic, id)
 }
 
-func (c client) PopJob(topic string) (id string, body string, err error) {
+func (c client) PopJob(topic string) (topicName, id, body string, delay, ttr uint64, err error) {
 	return c.request.PopDelayJob(topic)
 }
