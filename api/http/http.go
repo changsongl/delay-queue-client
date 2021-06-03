@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/changsongl/delay-queue-client/api"
+	"github.com/changsongl/delay-queue-client/common"
 	"github.com/go-resty/resty/v2"
 	"net/http"
 )
@@ -21,8 +22,6 @@ type Data struct {
 	Delay uint64 `json:"delay"`
 	TTR   uint64 `json:"ttr"`
 }
-
-var ErrorNoAvailableJob = errors.New("no available job")
 
 type requester struct {
 	req  *resty.Client
@@ -107,7 +106,7 @@ func (r *requester) PopDelayJob(topic string) (topicName, id, body string, delay
 	}
 
 	if respBody.Data == nil {
-		return "", "", "", 0, 0, ErrorNoAvailableJob
+		return "", "", "", 0, 0, common.ErrorNoAvailableJob
 	}
 
 	return respBody.Data.Topic, respBody.Data.Id, respBody.Data.Body,

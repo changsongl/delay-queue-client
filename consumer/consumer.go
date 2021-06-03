@@ -1,8 +1,8 @@
 package consumer
 
 import (
-	"github.com/changsongl/delay-queue-client/api/http"
 	"github.com/changsongl/delay-queue-client/client"
+	"github.com/changsongl/delay-queue-client/common"
 	"sync"
 	"time"
 )
@@ -68,7 +68,7 @@ func (q *consumer) Consume() <-chan Message {
 				}
 
 				topic, id, body, delay, ttr, err := q.client.PopJob(q.topic)
-				if err == http.ErrorNoAvailableJob {
+				if err == common.ErrorNoAvailableJob {
 					q.Wait(timer, consumerLoadFailed)
 					continue
 				} else if err != nil {
