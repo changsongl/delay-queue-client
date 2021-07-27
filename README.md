@@ -16,7 +16,7 @@ import (
 func main() {
 	// job object
 	myTopic, myID := "my-topic", "my-id"
-	j, err := job.New(myTopic, myID, job.JobDelayOption(2*time.Second), job.JobTTROption(30*time.Second))
+	j, err := job.New(myTopic, myID, job.DelayOption(2*time.Second), job.TTROption(30*time.Second))
 	if err != nil {
 		panic(err)
 	}
@@ -38,8 +38,8 @@ func main() {
 		panic(err)
 	}
 
-	// pop the job from queue
-	topic, id, body, delay, ttr, err := cli.PopJob(myTopic)
+	// pop the job from queue, no recommended. please use consumer.
+	topic, id, body, delay, ttr, err := cli.PopJob(myTopic, 3*time.Second)
 	if err != nil {
 		panic(err)
 	}
@@ -51,14 +51,27 @@ func main() {
 	}
 
 	// consumer jobs
-	c := consumer.New(cli, topic, consumer.WorkerNumOption(1))
+	c := consumer.New(
+		cli,
+		topic,
+		consumer.WorkerNumOption(1),
+		consumer.PopTimeoutOption(3*time.Second),
+	)
 	ch := c.Consume()
 	for jobMsg := range ch {
-		id := jobMsg.GetId()
+		id := jobMsg.GetID()
 		body := jobMsg.GetBody()
 
 		// do your job
 		fmt.Println(id, body)
+
+		if id == "xxx" {
+			// job is not valid anymore
+			if err = jobMsg.Finish(); err != nil {
+				// do something
+			}
+			continue
+		}
 
 		if err = jobMsg.Finish(); err != nil {
 			// do something

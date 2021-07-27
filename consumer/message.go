@@ -2,8 +2,9 @@ package consumer
 
 import "github.com/changsongl/delay-queue-client/client"
 
+// Message from delay queue
 type Message interface {
-	GetId() string
+	GetID() string
 	GetBody() string
 	GetTopic() string
 	GetDelay() uint64
@@ -13,6 +14,7 @@ type Message interface {
 	Delete() error
 }
 
+// message object
 type message struct {
 	topic string
 	body  string
@@ -23,6 +25,7 @@ type message struct {
 	client client.Client
 }
 
+// NewMessage create a new message
 func NewMessage(topic, body, id string, delay, ttr uint64, client client.Client) Message {
 	return &message{
 		topic:  topic,
@@ -34,30 +37,37 @@ func NewMessage(topic, body, id string, delay, ttr uint64, client client.Client)
 	}
 }
 
-func (m *message) GetId() string {
+// GetID get id of the job
+func (m *message) GetID() string {
 	return m.id
 }
 
+// GetBody get body of the job
 func (m *message) GetBody() string {
 	return m.body
 }
 
+// GetTopic get topic of the job
 func (m *message) GetTopic() string {
 	return m.topic
 }
 
+// GetDelay get delay time of the job
 func (m *message) GetDelay() uint64 {
 	return m.delay
 }
 
+// GetTTR get time to run of the job
 func (m *message) GetTTR() uint64 {
 	return m.ttr
 }
 
+// Finish the job
 func (m *message) Finish() error {
 	return m.client.FinishJob(m.topic, m.id)
 }
 
+// Delete the job
 func (m *message) Delete() error {
 	return m.client.DeleteJob(m.topic, m.id)
 }

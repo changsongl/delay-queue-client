@@ -10,17 +10,18 @@ import (
 type consumeStatus int
 
 const (
-	consumerLoadSuccess consumeStatus = iota
-	consumerLoadFailed
-	consumerError
+	// consumer has error
+	consumerError consumeStatus = iota
 )
 
+// Consumer interface
 type Consumer interface {
 	Consume() <-chan Message
 	Close() bool
 	IsClosed() bool
 }
 
+// consumer object
 type consumer struct {
 	client client.Client
 	topic  string
@@ -30,11 +31,12 @@ type consumer struct {
 	conf   *config
 }
 
+// timer for sleep
 type timer struct {
-	backOff      time.Duration
 	errorBackOff time.Duration
 }
 
+// New a consumer
 func New(client client.Client, topic string, options ...Option) Consumer {
 	conf := newConfig()
 	conf.apply(options...)
@@ -46,6 +48,7 @@ func New(client client.Client, topic string, options ...Option) Consumer {
 	}
 }
 
+// Consume the delay queue for the topic
 func (q *consumer) Consume() <-chan Message {
 	c := q.createChan()
 
@@ -57,7 +60,6 @@ func (q *consumer) Consume() <-chan Message {
 	for i := 0; i < int(producerNum); i++ {
 		go func(q *consumer, c chan Message) {
 			timer := &timer{
-				backOff:      q.conf.backOff,
 				errorBackOff: q.conf.errorBackOff,
 			}
 
@@ -67,9 +69,8 @@ func (q *consumer) Consume() <-chan Message {
 					break
 				}
 
-				topic, id, body, delay, ttr, err := q.client.PopJob(q.topic)
+				topic, id, body, delay, ttr, err := q.client.PopJob(q.topic, q.conf.popTimeout)
 				if err == common.ErrorNoAvailableJob {
-					q.Wait(timer, consumerLoadFailed)
 					continue
 				} else if err != nil {
 					_ = q.log(err.Error())
@@ -79,7 +80,6 @@ func (q *consumer) Consume() <-chan Message {
 
 				msg := NewMessage(topic, body, id, delay, ttr, q.client)
 				c <- msg
-				q.Wait(timer, consumerLoadSuccess)
 			}
 		}(q, c)
 	}
@@ -87,6 +87,7 @@ func (q *consumer) Consume() <-chan Message {
 	return c
 }
 
+// create a chan for consumer
 func (q *consumer) createChan() chan Message {
 	var c chan Message
 	if q.conf.workerNum == 0 {
@@ -98,6 +99,7 @@ func (q *consumer) createChan() chan Message {
 	return c
 }
 
+// Close close consumer
 func (q *consumer) Close() bool {
 	if q.closed {
 		return false
@@ -113,6 +115,7 @@ func (q *consumer) Close() bool {
 	return true
 }
 
+// IsClosed check it is closed
 func (q *consumer) IsClosed() bool {
 	q.Lock()
 	defer q.Unlock()
@@ -120,25 +123,16 @@ func (q *consumer) IsClosed() bool {
 	return q.closed
 }
 
+// log msg
 func (q *consumer) log(msg string) error {
 	return q.conf.l.Write(msg)
 }
 
+// Wait timer sleep function
 func (q *consumer) Wait(t *timer, status consumeStatus) {
 	switch status {
-	case consumerLoadSuccess:
-		t.backOff = q.conf.backOff
-		t.errorBackOff = q.conf.errorBackOff
-	case consumerLoadFailed:
-		time.Sleep(t.backOff)
-		t.backOff = time.Duration(float64(t.backOff+q.conf.backOffInc) * q.conf.backOffFactor)
-		if t.backOff > q.conf.backOffMax {
-			t.backOff = q.conf.backOffMax
-		}
-		t.errorBackOff = q.conf.errorBackOff
 	case consumerError:
 		time.Sleep(t.errorBackOff)
-		t.backOff = q.conf.backOff
 		t.errorBackOff = time.Duration(float64(t.errorBackOff+q.conf.errorBackOffInc) * q.conf.errorBackOffFactor)
 		if t.errorBackOff > q.conf.errorBackOffMax {
 			t.errorBackOff = q.conf.errorBackOffMax

@@ -2,6 +2,7 @@ package job
 
 import "time"
 
+// Option job option
 type Option interface {
 	apply(j *Job)
 }
@@ -12,17 +13,19 @@ func (f jobOptionFunc) apply(j *Job) {
 	f(j)
 }
 
+// Job job object
 type Job struct {
 	Topic jobTopic `json:"jobTopic"`
-	ID    jobId    `json:"jobId"`
+	ID    jobID    `json:"jobID"`
 	Delay jobDelay `json:"jobDelay"`
 	TTR   jobTTR   `json:"jobTTR"`
 	Body  jobBody  `json:"jobBody"`
 }
 
+// New a job
 func New(topic, id string, opts ...Option) (*Job, error) {
 	j := &Job{
-		ID:    jobId(id),
+		ID:    jobID(id),
 		Topic: jobTopic(topic),
 	}
 
@@ -33,7 +36,8 @@ func New(topic, id string, opts ...Option) (*Job, error) {
 	return j, nil
 }
 
-func JobDelayOption(delay time.Duration) Option {
+// DelayOption job delay time
+func DelayOption(delay time.Duration) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.Delay = jobDelay(delay)
@@ -41,7 +45,8 @@ func JobDelayOption(delay time.Duration) Option {
 	)
 }
 
-func JobTTROption(ttr time.Duration) Option {
+// TTROption job time to run
+func TTROption(ttr time.Duration) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.TTR = jobTTR(ttr)
@@ -49,7 +54,8 @@ func JobTTROption(ttr time.Duration) Option {
 	)
 }
 
-func JobBodyOption(body string) Option {
+// BodyOption job body
+func BodyOption(body string) Option {
 	return jobOptionFunc(
 		func(j *Job) {
 			j.Body = jobBody(body)
@@ -57,6 +63,7 @@ func JobBodyOption(body string) Option {
 	)
 }
 
+// check job is valid
 func (j *Job) checkValid() error {
 	fields := j.getCheckFields()
 	for _, field := range fields {
@@ -69,10 +76,12 @@ func (j *Job) checkValid() error {
 	return nil
 }
 
-func (j *Job) getCheckFields() []JobField {
-	return []JobField{j.Topic, j.ID}
+// check field
+func (j *Job) getCheckFields() []Field {
+	return []Field{j.Topic, j.ID}
 }
 
+// ExtractData extract job data
 func (j *Job) ExtractData() (topic, id, body string, delay, ttr uint) {
 	return string(j.Topic), string(j.ID), string(j.Body),
 		uint(time.Duration(j.Delay) / time.Second), uint(time.Duration(j.TTR) / time.Second)

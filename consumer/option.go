@@ -3,52 +3,46 @@ package consumer
 import "time"
 
 const (
-	defaultBackOff       = 10 * time.Millisecond
-	defaultBackOffInc    = 0 * time.Second
-	defaultBackOffFactor = 2.0
-	defaultBackOffMax    = 2 * time.Second
+	// popping timeout
+	defaultPopTimeout = 4 * time.Second
 
+	// error backoff times
 	defaultErrorBackOff       = 100 * time.Millisecond
 	defaultErrorBackOffInc    = 0 * time.Second
 	defaultErrorBackOffFactor = 2.0
 	defaultErrorBackOffMax    = 10 * time.Second
 
+	// default ttr time
 	defaultTTR = 0 * time.Second
 
+	// default work num
 	defaultWorkNum = 0
 )
 
+// config of consumer
 type config struct {
-	backOff       time.Duration
-	backOffInc    time.Duration
-	backOffFactor float64
-	backOffMax    time.Duration
-
+	popTimeout         time.Duration
 	errorBackOff       time.Duration
 	errorBackOffInc    time.Duration
 	errorBackOffFactor float64
 	errorBackOffMax    time.Duration
-
-	ttr time.Duration
 
 	workerNum int64
 
 	l Log
 }
 
+// Option func
 type Option func(config *config)
 
+// create a config
 func newConfig() *config {
 	return &config{
-		backOff:            defaultBackOff,
-		backOffInc:         defaultBackOffInc,
-		backOffFactor:      defaultBackOffFactor,
-		backOffMax:         defaultBackOffMax,
+		popTimeout:         defaultPopTimeout,
 		errorBackOff:       defaultErrorBackOff,
 		errorBackOffInc:    defaultErrorBackOffInc,
 		errorBackOffFactor: defaultErrorBackOffFactor,
 		errorBackOffMax:    defaultErrorBackOffMax,
-		ttr:                defaultTTR,
 		l:                  newLog(),
 		workerNum:          defaultWorkNum,
 	}
@@ -60,66 +54,49 @@ func (c *config) apply(options ...Option) {
 	}
 }
 
-func BackOffOption(t time.Duration) Option {
+// PopTimeoutOption pop job timeout
+func PopTimeoutOption(t time.Duration) Option {
 	return func(config *config) {
-		config.backOff = t
+		config.popTimeout = t
 	}
 }
 
-func BackOffIncOption(t time.Duration) Option {
-	return func(config *config) {
-		config.backOffInc = t
-	}
-}
-
-func BackOffMaxOption(t time.Duration) Option {
-	return func(config *config) {
-		config.backOffMax = t
-	}
-}
-
-func BackOffFactor(f float64) Option {
-	return func(config *config) {
-		config.backOffFactor = f
-	}
-}
-
+// ErrorBackOffOption delay queue error backoff time
 func ErrorBackOffOption(t time.Duration) Option {
 	return func(config *config) {
 		config.errorBackOff = t
 	}
 }
 
+// ErrorBackOffIncOption delay queue error backoff time increment
 func ErrorBackOffIncOption(t time.Duration) Option {
 	return func(config *config) {
 		config.errorBackOffInc = t
 	}
 }
 
+// ErrorBackOffMaxOption max error backoff time
 func ErrorBackOffMaxOption(t time.Duration) Option {
 	return func(config *config) {
 		config.errorBackOffMax = t
 	}
 }
 
+// ErrorBackOffFactorOption error backoff time increasing factor
 func ErrorBackOffFactorOption(f float64) Option {
 	return func(config *config) {
 		config.errorBackOffFactor = f
 	}
 }
 
-func TTROption(ttr time.Duration) Option {
-	return func(config *config) {
-		config.ttr = ttr
-	}
-}
-
+// LoggerOption set consumer logger
 func LoggerOption(l Log) Option {
 	return func(config *config) {
 		config.l = l
 	}
 }
 
+// WorkerNumOption worker num to consume
 func WorkerNumOption(num int64) Option {
 	return func(config *config) {
 		config.workerNum = num

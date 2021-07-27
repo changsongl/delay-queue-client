@@ -7,16 +7,18 @@ import (
 
 type (
 	jobTopic string
-	jobId    string
+	jobID    string
 	jobDelay time.Duration
 	jobTTR   time.Duration
 	jobBody  string
 )
 
-type JobField interface {
+// Field job field interface
+type Field interface {
 	IsValid() error
 }
 
+// IsValid check it is valid
 func (t jobTopic) IsValid() error {
 	if t == "" {
 		return errors.New("jobTopic is empty")
@@ -30,14 +32,15 @@ func (t jobTopic) IsValid() error {
 	return nil
 }
 
-func (id jobId) IsValid() error {
+// IsValid check is valid
+func (id jobID) IsValid() error {
 	if id == "" {
-		return errors.New("jobId is empty")
+		return errors.New("jobID is empty")
 	}
 
 	l := len(id)
 	if l > 50 {
-		return errors.New("jobId contains over 50 characters")
+		return errors.New("jobID contains over 50 characters")
 	}
 
 	return nil
