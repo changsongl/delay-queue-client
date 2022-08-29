@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// client
-	cli := client.NewClient("127.0.0.1:8000")
+	cli := client.NewClient("http://127.0.0.1:8000")
 	// adding job to delay queue, if job is exist will be failed
 	if err = cli.AddJob(j); err != nil {
 		panic(err)
